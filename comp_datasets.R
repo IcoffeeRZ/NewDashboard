@@ -3,6 +3,7 @@ mn   <- read.csv("data/mn_withdist.csv", stringsAsFactors = F, strip.white = T)
 prob <- read.csv("data/newprob.csv", stringsAsFactors = F, strip.white = T)
 desc <- read.csv("data/qualityclassdesc.csv", stringsAsFactors = F,
                  strip.white = T, na = "")
+pluto.classdesc <- read.csv("data/pluto_bldgclass_desc.csv", stringsAsFactors = F, strip.white = T)
 
 # ITMN <- read.csv("data/to_IT_MN.csv", stringsAsFactors = F, strip.white = T)
 cleanMN <- read.csv("data/clean_MN.csv", stringsAsFactors = F, strip.white = T)

@@ -1,8 +1,7 @@
-#
-################################### Test_New ###################################
-#
 library(shinydashboard)
 library(shiny)
+library(ggplot2) # depth percentage plot
+library(plyr)  # rounding dollar amount
 
 server <- function(input, output) {
   
@@ -15,11 +14,6 @@ server <- function(input, output) {
     currentBBL <- input$bbl
   })
   
-  # bblRow <- reactive({
-  #   currentRow <- mn[mn$BBL == input$bbl, ]      
-  # })
-  
-  # # Material
   output$choose_material <- renderUI({
     if(is.null(input$bbl))  
       return()
@@ -29,8 +23,6 @@ server <- function(input, output) {
     if(all(is.na(lot[matLogic])))
       return("No available material!")
     materialOptions <- materialList[which(!is.na(lot[matLogic]))]
-
-    #!!!!!!!!!!!!!!!!!!!!!!!!
     selectizeInput("material", "Choose a material:", 
                    choices = materialOptions, selected = materialOptions[1])
     # default option is the 1st element in materialOptions
@@ -44,14 +36,7 @@ server <- function(input, output) {
       return()
     if (is.na(input$material))   
       return()
-    # lot <- mn[mn$BBL == input$bbl, ]
-    # btype <- typeidList[which(materialList == input$material)]
-    # id <- as.numeric(lot[btype])  # buildingtypeid
-    # if (is.null(id)) # if missing material, return to avoid error
-    #   return()
-    # if (is.na(id))   # if missing material, return to avoid error
-    #   return()
-    # qclasses <- as.vector(t(desc[which(desc$buildingtypeid == id), 2:7]))
+
     qualityOptions <- get_QualityClasses(get_Typeid(input$bbl, input$material, mn))
     selectizeInput("quality", "Choose a construction quality:", 
                    choices = qualityOptions, selected = qualityOptions[1])
@@ -59,7 +44,7 @@ server <- function(input, output) {
   })
   
   output$choose_basement <- renderUI({
-    radioButtons("basement", label = "Basement",
+    radioButtons("basement", label = "Basement", inline = TRUE,
                  choices = list("Yes" = TRUE, "No" = FALSE), 
                  selected = TRUE)
   })
@@ -93,16 +78,18 @@ server <- function(input, output) {
       stringsAsFactors=FALSE)
   }) 
   
-  computeCost <- reactive({
+  computeCost <- eventReactive(input$go, {
     quality <- which(get_QualityClasses(get_Typeid(input$bbl, input$material, mn)) == input$quality)
-    return(get_TotalCost(BBL = input$bbl, Material = input$material, 
-                  QualityClassNum  = quality, 
-                  BsmtType = input$basement,
-                  PlutoTable = mn))
+    costCompList <- get_TotalCost(BBL = input$bbl, Material = input$material, 
+                                  QualityClassNum  = quality, 
+                                  BsmtType = input$basement,
+                                  PlutoTable = mn)
+    return(costCompList)
     
   }) 
-
-  computeDamage <- reactive({
+  
+  
+  computeDamage <- eventReactive(input$go, {
     pr <- mn[mn$BBL == input$bbl, ]
     bclass <- get_BldgClass(BBL = input$bbl, PlutoTable = mn)
 
@@ -113,11 +100,13 @@ server <- function(input, output) {
     depth <- ifelse(depth > 24, 24, depth)
     p.damage <- ifelse(depth < -4, 0, curve[depth+5])
     # p.damage <- curve[depth+5]
-    damage <- p.damage * computeCost()
-    damage #!!!!!!!!!!!! return(damage)
+    damage <- p.damage * computeCost()$total.cost
+    damage
   })
   
   #++++++++++++++++++++++++++++++++++ OUTPUT +++++++++++++++++++++++++++++++++++
+  
+  
   # # Show row information of BBL
   output$show_taxlot <- renderPrint({
     data.frame(mn[mn$BBL == input$bbl, displayColList])
@@ -129,35 +118,30 @@ server <- function(input, output) {
       return()
     if (is.null(input$material)) 
       return()
-    # if (anyNA(input$material)) 
-    #   return()
     if (is.null(input$quality))  
       return()
-    # if (anyNA(input$quality))
-    #   return()
     if (is.null(input$basement))
       return()
 
     inputValues()
   })
   
+  output$unitCosts <- renderTable({
+    computeCost()$displayCosts
+  })  
+
+  output$underlying <- renderTable({
+    computeCost()$displayUnderlying
+  })     
+  
   output$show_totalcost <- renderPrint({
     if(is.null(input$bbl))      
       return()
     if (is.null(input$material)) 
       return()
-    # if (is.na(input$material)) 
-    #   return()
-    # if (anyNA(input$material)) 
-    #   return()
     if (is.null(input$quality)) 
       return()
-    # if (anyNA(input$quality))
-    #   return()
-    # if (is.null(input$basement))
-    #   return()
-    
-    computeCost()
+    computeCost()$total.cost
   })
   
   output$show_damage <- renderPrint({
@@ -165,19 +149,21 @@ server <- function(input, output) {
       return()
     if (is.null(input$material)) 
       return()
-    # if (anyNA(input$material))
-      # return()
     if (is.null(input$quality))   
       return()
-    # if (anyNA(input$quality))
-      # return()
     if (is.null(input$basement)) 
       return()
-    # if (is.null(computeCost()))
-      # return()
-    # if (anyNA(computeCost()))
-      # return()
-    computeDamage() #!!!!!!!!!!!!!!
+    computeDamage()
   })
+  
+  output$show_depthfunction <- renderPlot({
+    bclass <- mn[mn$BBL == input$bbl, "BldgClass"]
+    ftype <- mn[mn$BBL == input$bbl, "flood_type"]
+    qplot(seq(-4,24), 100*get_DamageProbs(bclass, input$basement, "Fresh"), 
+          ylab = "Percentage (%)", xlab ="Water Depth (ft)", 
+          geom = c("point", "smooth")) + geom_line()      
+  })  
+  
+  
   
 }

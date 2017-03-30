@@ -86,7 +86,8 @@ get_TotalCost <- function(BBL, Material, QualityClassNum, BsmtType, PlutoTable){
   
   typeid  <- get_Typeid(BBL, Material, PlutoTable)
   shapeid <- get_Shapeid(BBL, PlutoTable)
-  print(paste("BuildingTypeID:",typeid))
+  bclass <- get_BldgClass(BBL, PlutoTable)
+  # print(paste("BuildingTypeID:",typeid))  # print buildingtypeid !!!!!!! 
   # extract basement cost coefficients\
   bsmt.coefs <- get_BsmtCoefs(typeid)
   # extract first floor cost coefficients
@@ -164,13 +165,29 @@ get_TotalCost <- function(BBL, Material, QualityClassNum, BsmtType, PlutoTable){
                            round(area.bsmt,0),
                            round(unit.first,0),
                            round(unit.second,0),
-                           round(area.floor,0)
-    )), 
+                           round(area.floor,0))),
+ 
     stringsAsFactors=FALSE)
-  print(displayCosts)
+  # print(displayCosts)
+  # print(paste("Total Construction Cost: ", total.cost))
+  
+  displayUnderlying <- data.frame(
+    Name = c("Address", 
+             "Building Class",
+             "Number of Floors",
+             "Total Building Area",
+             "Total Construction Cost"),
+    
+    Value = as.character(c(paste(r$Address, ", ",r$ZipCode), 
+                           paste(bclass, " ", pluto.classdesc$ClassDesc[pluto.classdesc$BldgClass == bclass]),
+                           PlutoTable[which(PlutoTable$BBL == BBL), "NumFloors"],
+                           PlutoTable[which(PlutoTable$BBL == BBL), "BldgArea"],
+                           round(total.cost, 0))),
+    
+    stringsAsFactors=FALSE)
   
   
-  return(total.cost)
+  return(list("total.cost" = total.cost, "displayCosts" = displayCosts, "displayUnderlying" = displayUnderlying))
   
 }
 

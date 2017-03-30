@@ -1,6 +1,3 @@
-#
-################################### Test_New ###################################
-#
 library(shinydashboard)
 library(shiny)
 
@@ -8,7 +5,7 @@ library(shiny)
 
 sidebar <- dashboardSidebar(
               sidebarMenu(
-                menuItem("Cost", tabName = "costCalc", icon = icon("building")),
+                menuItem("Damage Calculator", tabName = "costCalc", icon = icon("building")),
                 menuItem("Widgets", tabName = "widgets", icon = icon("area-chart"))
               )
             )
@@ -21,40 +18,39 @@ body    <- dashboardBody(
                 tabItem(tabName = "costCalc",
                   
                   fluidRow(
-
-                        box(title = "User Inputs", status = "primary", 
+                        box(title = "User Inputs", status = "primary", width = 4,
                             solidHeader = TRUE, collapsible = TRUE,
                             uiOutput("choose_bbl"),
                             uiOutput("choose_material"),
                             uiOutput("choose_quality"),
                             uiOutput("choose_basement"),
                             uiOutput("choose_elevation"),
-                            uiOutput("choose_water")),
+                            uiOutput("choose_water"),
+                            actionButton(inputId = "go", label = "Calculate Damage", 
+                                         style="color: #fff; background-color: #337ab7; border-color: #2e6da4",
+                                         icon = icon("desktop"))),
                         
                         tabBox(
-                          side = "left", height = "567px",
-                          selected = "Tab1",
-                          tabPanel("Tab1", 
+                          side = "left", height = "543px", width = 5,
+                          selected = "Total Cost & Damage",
+                          tabPanel("Total Cost & Damage", 
                                    h4("Total Construction Cost"), 
                                    verbatimTextOutput("show_totalcost"),
+                                   br(),
                                    h4("Total Damage"), 
-                                   verbatimTextOutput("show_damage")),
-                          tabPanel("Tab2", "Tab content 2"),
-                          tabPanel("Tab3", "Note that when side=right, the tab order is reversed.")
+                                   verbatimTextOutput("show_damage"),
+                                   br(),
+                                   h4("Unit Costs"),
+                                   tableOutput("unitCosts")),
+                          tabPanel("Underlying", 
+                                   h4("Building Information"),tableOutput("values"),
+                                   br(),tableOutput("underlying")),
+                          tabPanel("Percentage Curve",
+                                   plotOutput("show_depthfunction"))
                         )
                         # box(
                         #    h4("Information of Selected Tax Lot"),
-                        #    verbatimTextOutput("show_taxlot"),
-                        #    
-                        #    h4("Observations"),
-                        #    tableOutput("values"),
-                        #    
-                        #    h4("Total Construction Cost"),
-                        #    verbatimTextOutput("show_totalcost"),
-                        #    
-                        #    h4("Total Damage"),
-                        #    verbatimTextOutput("show_damage"))
-                    
+                        #    verbatimTextOutput("show_taxlot"),)
                   )      
                 ),
                 
@@ -74,42 +70,3 @@ ui <- dashboardPage(skin = "blue",
         
         body
 )
-
-##ORIGINAL DESIGN
-# shinyUI(pageWithSidebar(
-#   
-#   headerPanel(""),
-#   
-#   sidebarPanel(
-#     uiOutput("choose_bbl"),
-#     
-#     uiOutput("choose_material"),
-#     
-#     uiOutput("choose_quality"),
-#     
-#     uiOutput("choose_basement"),
-#     
-#     uiOutput("choose_elevation"),
-#     
-#     uiOutput("choose_water"),
-#     
-#     br()
-#     # submitButton("Update View")
-#   ),
-#   
-#   
-#   mainPanel(
-#     h4("Information of Selected Tax Lot"),
-#     verbatimTextOutput("show_taxlot"),
-#     
-#     h4("Observations"),
-#     tableOutput("values"),
-#     
-#     h4("Total Construction Cost"),
-#     verbatimTextOutput("show_totalcost"),
-#     
-#     h4("Total Damage"),
-#     verbatimTextOutput("show_damage")
-# 
-#   )
-# ))

@@ -102,8 +102,29 @@ get_TotalCost(BBL = 1014650009, Material = "Default", QualityClassNum = 1,
               BsmtType = TRUE, PlutoTable = mn)  
 
   
+get_DamageProbs("A0", TRUE, "Fresh")  
   
-  
-  
-  
+ggplot(seq_along(seq(-4,24)),get_DamageProbs("A0", TRUE, "Fresh"))  
+qplot(seq(-4,24), 100*get_DamageProbs("A0", TRUE, "Fresh"), ylab = "Percentage (%)", xlab ="Water Depth (ft)", geom = c("point", "smooth")) + geom_line()  
+
+
+
+
+sprintf("%s costed $ %3.2f ", stuff, price)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
