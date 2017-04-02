@@ -5,8 +5,10 @@ library(shiny)
 
 sidebar <- dashboardSidebar(
               sidebarMenu(
-                menuItem("Damage Calculator", tabName = "costCalc", icon = icon("building")),
-                menuItem("Widgets", tabName = "widgets", icon = icon("area-chart"))
+                menuItem("Damage Calculator", tabName = "costCalc", icon = icon("calculator")),
+                menuItem("Satellite View", tabName = "satelliteView", icon = icon("street-view")),
+                menuItem("Interactive Map", tabName = "interMap", icon = icon("map-o")),
+                menuItem("Property Explorer", tabName = "explorer", icon = icon("building"))
               )
             )
 
@@ -18,7 +20,7 @@ body    <- dashboardBody(
                 tabItem(tabName = "costCalc",
                   
                   fluidRow(
-                        box(title = "User Inputs", status = "primary", width = 4,
+                        box(title = "User Inputs", status = "primary", width = 3,
                             solidHeader = TRUE, collapsible = TRUE,
                             uiOutput("choose_bbl"),
                             uiOutput("choose_material"),
@@ -31,11 +33,12 @@ body    <- dashboardBody(
                                          icon = icon("desktop"))),
                         
                         tabBox(
-                          side = "left", height = "543px", width = 5,
+                          side = "left", height = "700px", width = 4,
                           selected = "Total Cost & Damage",
                           tabPanel("Total Cost & Damage", 
-                                   h4("Total Construction Cost"), 
-                                   verbatimTextOutput("show_totalcost"),
+                                   h4("Building Information"), 
+                                   tableOutput("underlying"),
+                                   # verbatimTextOutput("show_totalcost"),
                                    br(),
                                    h4("Total Damage"), 
                                    verbatimTextOutput("show_damage"),
@@ -44,20 +47,41 @@ body    <- dashboardBody(
                                    tableOutput("unitCosts")),
                           tabPanel("Underlying", 
                                    h4("Building Information"),tableOutput("values"),
-                                   br(),tableOutput("underlying")),
-                          tabPanel("Percentage Curve",
-                                   plotOutput("show_depthfunction"))
-                        )
-                        # box(
-                        #    h4("Information of Selected Tax Lot"),
-                        #    verbatimTextOutput("show_taxlot"),)
-                  )      
+                                   br(),
+                                   h4("Percentage Curve"), plotOutput("show_depthfunction"))
+                        ),
+                        
+                        box(title = "Street View", status = "primary", width = 5,
+                            collapsible = TRUE, 
+                            height = "700px",
+                            htmlOutput("street_pic"))
+                        
+                  )
+                  
                 ),
                 
                 
                 # Second tab content
-                tabItem(tabName = "widgets",
-                        h2("Widgets tab content")
+                tabItem(tabName = "satelliteView",
+                        google_mapOutput("satellite_view", width = "100%", height = "800px")
+                ),
+                # Third tab content
+                tabItem(tabName = "interMap",
+                        h2("Under Construction")
+                ),
+                # Fourth tab content
+                tabItem(tabName = "explorer",
+                        fluidRow(
+                          box(title = "Columns in PLUTO", status = "primary",
+                              width = 10, solidHeader = TRUE, collapsible = TRUE,
+                            checkboxGroupInput('show_vars', 'Columns in PLUTO:',
+                                               colnames(mn), selected = colnames(mn),inline = T)
+                          ),
+                  
+                          DT::dataTableOutput('mytable1')
+
+                        )
+                        
                 )
               )
 )

@@ -2,6 +2,12 @@ library(shinydashboard)
 library(shiny)
 library(ggplot2) # depth percentage plot
 library(plyr)  # rounding dollar amount
+library(leaflet)
+library(googleway)
+library(magrittr)  # # for the pipe '%>%'
+library(ggmap)
+
+streetviewAPIkey <- "AIzaSyB-Mr1Dool2jrUUYB19SQN84d6VDcZNrEQ"
 
 server <- function(input, output) {
   
@@ -164,6 +170,49 @@ server <- function(input, output) {
           geom = c("point", "smooth")) + geom_line()      
   })  
   
+  loc <- reactive({
+    data.frame(lat = mn[mn$BBL == input$bbl, "Latitude"], 
+               lon = mn[mn$BBL == input$bbl, "Longitude"], 
+               info = mn[mn$BBL == input$bbl, "Address"])
+  })
+  
+  # Satellite View Tab: Google Static Map
+  output$satellite_view <- renderGoogle_map({
+    google_map(key="AIzaSyBq2-Ly8zzGkNxmyvYHm1IYYt-sQsIXGmc", search_box=T,
+               location=c(40.7589,-73.9851), zoom=12)
+  })  
+  
+  # Update Marker on Map
+  observeEvent(input$go,{
+    google_map_update(map_id = "satellite_view") %>%
+        clear_markers() %>%
+        add_markers(data = loc(), info_window = "info")
+  })
+  
+  # Choose columns to display
+  output$mytable1 <- DT::renderDataTable({
+    DT::datatable(mn[, input$show_vars, drop = FALSE])
+  })
+  
+  getStreetviewURL <- eventReactive(input$go, {
+    addrString <- paste(mn[mn$BBL == input$bbl,"Address"], "New York",
+                        mn[mn$BBL == input$bbl,"ZipCode"])
+    google_streetview(location = addrString,
+                      size = c(600,600),
+                      panorama_id = NULL,
+                      output = "html",
+                      fov = 100,
+                      pitch = 15,
+                      response_check = FALSE,
+                      key = streetviewAPIkey)
+  })
+  
+  output$street_pic = renderUI({
+    tags$img(src = getStreetviewURL())  
+  })
+  # output$street_pic <- renderPlot({
+  #   getStreetview()
+  # })
   
   
 }
